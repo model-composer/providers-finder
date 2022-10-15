@@ -13,5 +13,8 @@
     },
     "require": {
         "composer-runtime-api": "^2.1"
+    },
+    "suggest": {
+        "model/cache": "To cache and speed up lookups"
     }
 }

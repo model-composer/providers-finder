@@ -6,6 +6,20 @@ class Providers
 {
 	public static function find(string $className): array
 	{
+		if (class_exists('\\Model\\Cache\\Cache')) {
+			$cache = \Model\Cache\Cache::getCacheAdapter();
+			$cache->get('model.providers-finder.' . $className, function (\Symfony\Contracts\Cache\ItemInterface $item) use ($className) {
+				$item->expiresAfter(3600);
+				\Model\Cache\Cache::registerInvalidation('keys', ['model.providers-finder.' . $className]);
+				return self::doFind($className);
+			});
+		} else {
+			return self::doFind($className);
+		}
+	}
+
+	private static function doFind(string $className): array
+	{
 		$providers = [];
 		$seen = [];
 
