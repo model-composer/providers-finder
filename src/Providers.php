@@ -43,7 +43,7 @@ class Providers
 
 					$fullClassName = '\\Model\\' . $namespaceName . '\\' . $className;
 					if (class_exists($fullClassName)) {
-						$providers[] = [
+						$providers[$fullClassName] = [
 							'package' => $package,
 							'packageData' => $packageData,
 							'provider' => $fullClassName,
@@ -59,15 +59,16 @@ class Providers
 				if (file_exists($module_dir . DIRECTORY_SEPARATOR . $className . '.php')) {
 					$module_name = explode(DIRECTORY_SEPARATOR, $module_dir);
 					$module_name = array_reverse($module_name)[0];
-					$providers[] = [
+					$fullClassName = '\\Model\\' . $module_name . '\\' . $className;
+					$providers[$fullClassName] = [
 						'package' => $module_name,
 						'packageData' => null,
-						'provider' => '\\Model\\' . $module_name . '\\' . $className,
+						'provider' => $fullClassName,
 					];
 				}
 			}
 		}
 
-		return $providers;
+		return array_values($providers);
 	}
 }
