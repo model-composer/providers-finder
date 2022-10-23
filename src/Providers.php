@@ -6,7 +6,7 @@ class Providers
 {
 	private static array $cache = [];
 
-	public static function find(string $className): array
+	public static function find(string $className, array $ignorePackages = []): array
 	{
 		if (!isset(self::$cache[$className])) {
 			if (class_exists('\\Model\\Cache\\Cache')) {
@@ -21,7 +21,16 @@ class Providers
 			}
 		}
 
-		return self::$cache[$className];
+		if (count($ignorePackages) === 0) {
+			return self::$cache[$className];
+		} else {
+			$filtered = [];
+			foreach (self::$cache as $provider) {
+				if (!in_array($provider['package'], $ignorePackages))
+					$filtered[] = $provider;
+			}
+			return $filtered;
+		}
 	}
 
 	private static function doFind(string $className): array
