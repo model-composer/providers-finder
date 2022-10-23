@@ -61,7 +61,7 @@ class Providers
 								$dependencies[] = $dependentPackage;
 						}
 
-						foreach ($package['provider']::getDependencies() as $dependentPackage) {
+						foreach ($fullClassName::getDependencies() as $dependentPackage) {
 							if (!in_array($dependentPackage, $dependencies))
 								$dependencies[] = $dependentPackage;
 						}
@@ -81,8 +81,8 @@ class Providers
 		$sorter = new StringSort;
 
 		foreach ($providers as $package) {
-			$dependencies = array_filter($package['dependencies'], function ($dependency) use ($packages) {
-				return array_key_exists($dependency, $packages);
+			$dependencies = array_filter($package['dependencies'], function ($dependency) use ($providers) {
+				return array_key_exists($dependency, $providers);
 			});
 
 			$sorter->add($package['package'], $dependencies);
