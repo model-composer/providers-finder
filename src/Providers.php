@@ -25,7 +25,7 @@ class Providers
 			return self::$cache[$className];
 		} else {
 			$filtered = [];
-			foreach (self::$cache as $provider) {
+			foreach (self::$cache[$className] as $provider) {
 				if (!in_array($provider['package'], $ignorePackages))
 					$filtered[] = $provider;
 			}
