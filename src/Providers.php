@@ -1,6 +1,7 @@
 <?php namespace Model\ProvidersFinder;
 
 use Composer\InstalledVersions;
+use MJS\TopSort\Implementations\StringSort;
 
 class Providers
 {
@@ -51,16 +52,49 @@ class Providers
 					}, substr($package, 6)));
 
 					$fullClassName = '\\Model\\' . $namespaceName . '\\' . $className;
-					if (class_exists($fullClassName)) {
-						$providers[$fullClassName] = [
+					if (class_exists($fullClassName) and is_subclass_of($fullClassName, AbstractProvider::class)) {
+						$composerFile = json_decode(file_get_contents($packageData['install_path'] . DIRECTORY_SEPARATOR . 'composer.json'), true);
+
+						$dependencies = [];
+						foreach ($composerFile['require'] as $dependentPackage => $dependentPackageVersion) {
+							if (str_starts_with($dependentPackage, 'model/'))
+								$dependencies[] = $dependentPackage;
+						}
+
+						foreach ($package['provider']::getDependencies() as $dependentPackage) {
+							if (!in_array($dependentPackage, $dependencies))
+								$dependencies[] = $dependentPackage;
+						}
+
+						$providers[$package] = [
 							'package' => $package,
 							'packageData' => $packageData,
 							'provider' => $fullClassName,
+							'dependencies' => $dependencies,
 						];
 					}
 				}
 			}
 		}
+
+		// I sort them by their respective dependencies (using topsort algorithm)
+		$sorter = new StringSort;
+
+		foreach ($providers as $package) {
+			$dependencies = array_filter($package['dependencies'], function ($dependency) use ($packages) {
+				return array_key_exists($dependency, $packages);
+			});
+
+			$sorter->add($package['package'], $dependencies);
+		}
+
+		$sorted = $sorter->sort();
+
+		// Rebuild
+		$newProviders = [];
+		foreach ($sorted as $package)
+			$newProviders[$providers[$package]['provider']] = $providers[$package];
+		$providers = $newProviders;
 
 		// ModEl 3 modules
 		if (defined('INCLUDE_PATH') and is_dir(INCLUDE_PATH . 'model')) {
@@ -73,6 +107,7 @@ class Providers
 						'package' => $module_name,
 						'packageData' => null,
 						'provider' => $fullClassName,
+						'dependencies' => [],
 					];
 				}
 			}
