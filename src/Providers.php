@@ -77,24 +77,26 @@ class Providers
 			}
 		}
 
-		// I sort them by their respective dependencies (using topsort algorithm)
-		$sorter = new StringSort;
+		if (count($providers) > 0) {
+			// I sort them by their respective dependencies (using topsort algorithm)
+			$sorter = new StringSort;
 
-		foreach ($providers as $package) {
-			$dependencies = array_filter($package['dependencies'], function ($dependency) use ($providers) {
-				return array_key_exists($dependency, $providers);
-			});
+			foreach ($providers as $package) {
+				$dependencies = array_filter($package['dependencies'], function ($dependency) use ($providers) {
+					return array_key_exists($dependency, $providers);
+				});
 
-			$sorter->add($package['package'], $dependencies);
+				$sorter->add($package['package'], $dependencies);
+			}
+
+			$sorted = $sorter->sort();
+
+			// Rebuild
+			$newProviders = [];
+			foreach ($sorted as $package)
+				$newProviders[$providers[$package]['provider']] = $providers[$package];
+			$providers = $newProviders;
 		}
-
-		$sorted = $sorter->sort();
-
-		// Rebuild
-		$newProviders = [];
-		foreach ($sorted as $package)
-			$newProviders[$providers[$package]['provider']] = $providers[$package];
-		$providers = $newProviders;
 
 		// ModEl 3 modules
 		if (defined('INCLUDE_PATH') and is_dir(INCLUDE_PATH . 'model')) {
