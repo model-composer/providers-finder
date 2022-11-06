@@ -10,7 +10,7 @@ class Providers
 	public static function find(string $className, array $ignorePackages = []): array
 	{
 		if (!isset(self::$cache[$className])) {
-			if (class_exists('\\Model\\Cache\\Cache')) {
+			if (class_exists('\\Model\\Cache\\Cache') and $className !== 'ConfigProvider') {
 				$cache = \Model\Cache\Cache::getCacheAdapter();
 				self::$cache[$className] = $cache->get('model.providers-finder.' . $className, function (\Symfony\Contracts\Cache\ItemInterface $item) use ($className) {
 					$item->expiresAfter(3600);
