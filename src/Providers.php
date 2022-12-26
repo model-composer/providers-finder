@@ -51,7 +51,7 @@ class Providers
 						return strtoupper($matches[1]);
 					}, substr($package, 6)));
 
-					$fullClassName = '\\Model\\' . $namespaceName . '\\' . $className;
+					$fullClassName = '\\Model\\' . $namespaceName . '\\Providers\\' . $className;
 					if (class_exists($fullClassName) and is_subclass_of($fullClassName, AbstractProvider::class)) {
 						$composerFile = json_decode(file_get_contents($packageData['install_path'] . DIRECTORY_SEPARATOR . 'composer.json'), true);
 
@@ -104,7 +104,7 @@ class Providers
 				if (file_exists($module_dir . DIRECTORY_SEPARATOR . $className . '.php')) {
 					$module_name = explode(DIRECTORY_SEPARATOR, $module_dir);
 					$module_name = array_reverse($module_name)[0];
-					$fullClassName = '\\Model\\' . $module_name . '\\' . $className;
+					$fullClassName = '\\Model\\' . $module_name . '\\Providers\\' . $className;
 					$providers[$fullClassName] = [
 						'package' => $module_name,
 						'packageData' => null,
