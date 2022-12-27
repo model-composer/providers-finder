@@ -101,7 +101,7 @@ class Providers
 		// ModEl 3 modules
 		if (defined('INCLUDE_PATH') and is_dir(INCLUDE_PATH . 'model')) {
 			foreach (glob(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . '*') as $module_dir) {
-				if (file_exists($module_dir . DIRECTORY_SEPARATOR . $className . '.php')) {
+				if (file_exists($module_dir . DIRECTORY_SEPARATOR . 'Providers' . DIRECTORY_SEPARATOR . $className . '.php')) {
 					$module_name = explode(DIRECTORY_SEPARATOR, $module_dir);
 					$module_name = array_reverse($module_name)[0];
 					$fullClassName = '\\Model\\' . $module_name . '\\Providers\\' . $className;
