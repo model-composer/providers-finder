@@ -109,7 +109,7 @@ class Providers
 					return array_key_exists($dependency, $providers);
 				});
 
-				$sorter->add($package['package'], $dependencies);
+				$sorter->add($package['package'] ?? $package['provider'], $dependencies);
 			}
 
 			$sorted = $sorter->sort();
