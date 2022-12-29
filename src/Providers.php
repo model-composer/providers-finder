@@ -54,20 +54,22 @@ class Providers
 
 					$namespaces[] = [
 						'package' => $package,
-						'path' => $packageData['path'],
+						'path' => $packageData['install_path'],
 						'name' => '\\Model\\' . $namespaceName,
 					];
 				}
 			}
 		}
 
-		$config = Config::get('providers-finder');
-		foreach ($config['namespaces'] as $namespace) {
-			$namespaces[] = [
-				'package' => $namespace['package'] ?? null,
-				'path' => $namespace['path'] ?? null,
-				'name' => $namespace['name'],
-			];
+		if ($className !== 'ConfigProvider') { // Prevents infinite loop
+			$config = Config::get('providers-finder');
+			foreach ($config['namespaces'] as $namespace) {
+				$namespaces[] = [
+					'package' => $namespace['package'] ?? null,
+					'path' => $namespace['path'] ?? null,
+					'name' => $namespace['name'],
+				];
+			}
 		}
 
 		$providers = [];
@@ -90,7 +92,7 @@ class Providers
 						$dependencies[] = $dependentPackage;
 				}
 
-				$providers[$fullClassName] = [
+				$providers[$namespace['package'] ?? $fullClassName] = [
 					'package' => $namespace['package'] ?? null,
 					'provider' => $fullClassName,
 					'dependencies' => $dependencies,
