@@ -2,6 +2,7 @@
 
 use Composer\InstalledVersions;
 use MJS\TopSort\Implementations\StringSort;
+use Model\Config\Config;
 
 class Providers
 {
@@ -36,7 +37,7 @@ class Providers
 
 	private static function doFind(string $className): array
 	{
-		$providers = [];
+		$namespaces = [];
 		$seen = [];
 
 		foreach (InstalledVersions::getAllRawData() as $installedVersions) {
@@ -51,29 +52,49 @@ class Providers
 						return strtoupper($matches[1]);
 					}, substr($package, 6)));
 
-					$fullClassName = '\\Model\\' . $namespaceName . '\\Providers\\' . $className;
-					if (class_exists($fullClassName) and is_subclass_of($fullClassName, AbstractProvider::class)) {
-						$composerFile = json_decode(file_get_contents($packageData['install_path'] . DIRECTORY_SEPARATOR . 'composer.json'), true);
+					$namespaces[] = [
+						'package' => $package,
+						'path' => $packageData['path'],
+						'name' => '\\Model\\' . $namespaceName,
+					];
+				}
+			}
+		}
 
-						$dependencies = [];
-						foreach ($composerFile['require'] as $dependentPackage => $dependentPackageVersion) {
-							if (str_starts_with($dependentPackage, 'model/'))
-								$dependencies[] = $dependentPackage;
-						}
+		$config = Config::get('providers-finder');
+		foreach ($config['namespaces'] as $namespace) {
+			$namespaces[] = [
+				'package' => $namespace['package'] ?? null,
+				'path' => $namespace['path'] ?? null,
+				'name' => $namespace['name'],
+			];
+		}
 
-						foreach ($fullClassName::getDependencies() as $dependentPackage) {
-							if (!in_array($dependentPackage, $dependencies))
-								$dependencies[] = $dependentPackage;
-						}
+		$providers = [];
+		foreach ($namespaces as $namespace) {
+			$fullClassName = $namespace['name'] . '\\Providers\\' . $className;
+			if (class_exists($fullClassName) and is_subclass_of($fullClassName, AbstractProvider::class)) {
+				$dependencies = [];
 
-						$providers[$package] = [
-							'package' => $package,
-							'packageData' => $packageData,
-							'provider' => $fullClassName,
-							'dependencies' => $dependencies,
-						];
+				if (!empty($namespace['path'])) {
+					$composerFile = json_decode(file_get_contents($namespace['path'] . DIRECTORY_SEPARATOR . 'composer.json'), true);
+
+					foreach ($composerFile['require'] as $dependentPackage => $dependentPackageVersion) {
+						if (str_starts_with($dependentPackage, 'model/'))
+							$dependencies[] = $dependentPackage;
 					}
 				}
+
+				foreach ($fullClassName::getDependencies() as $dependentPackage) {
+					if (!in_array($dependentPackage, $dependencies))
+						$dependencies[] = $dependentPackage;
+				}
+
+				$providers[$fullClassName] = [
+					'package' => $namespace['package'] ?? null,
+					'provider' => $fullClassName,
+					'dependencies' => $dependencies,
+				];
 			}
 		}
 
@@ -107,7 +128,6 @@ class Providers
 					$fullClassName = '\\Model\\' . $module_name . '\\Providers\\' . $className;
 					$providers[$fullClassName] = [
 						'package' => $module_name,
-						'packageData' => null,
 						'provider' => $fullClassName,
 						'dependencies' => [],
 					];

@@ -13,7 +13,8 @@
     },
     "require": {
         "composer-runtime-api": "^2.1",
-        "marcj/topsort": "^2.0"
+        "marcj/topsort": "^2.0",
+        "model/config": "^0.7.4"
     },
     "suggest": {
         "model/cache": "To cache and speed up lookups"
