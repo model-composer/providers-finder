@@ -14,8 +14,7 @@ class Providers
 			if (class_exists('\\Model\\Cache\\Cache') and $className !== 'ConfigProvider') {
 				$cache = \Model\Cache\Cache::getCacheAdapter();
 				self::$cache[$className] = $cache->get('model.providers-finder.' . $className, function (\Symfony\Contracts\Cache\ItemInterface $item) use ($className) {
-					$item->expiresAfter(3600);
-					\Model\Cache\Cache::registerInvalidation('keys', ['model.providers-finder.' . $className]);
+					$item->expiresAfter(3600 * 24);
 					return self::doFind($className);
 				});
 			} else {
