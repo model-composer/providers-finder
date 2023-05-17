@@ -22,16 +22,15 @@ class Providers
 			}
 		}
 
-		if (count($ignorePackages) === 0) {
-			return self::$cache[$className];
-		} else {
-			$filtered = [];
-			foreach (self::$cache[$className] as $provider) {
-				if (!in_array($provider['package'], $ignorePackages))
-					$filtered[] = $provider;
-			}
-			return $filtered;
+		$filtered = [];
+		foreach (self::$cache[$className] as $provider) {
+			if ($provider['force_require'])
+				require_once($provider['force_require']);
+			if (!in_array($provider['package'], $ignorePackages))
+				$filtered[] = $provider;
 		}
+
+		return count($ignorePackages) === 0 ? self::$cache[$className] : $filtered;
 	}
 
 	private static function doFind(string $className): array
@@ -95,6 +94,7 @@ class Providers
 					'package' => $namespace['package'] ?? null,
 					'provider' => $fullClassName,
 					'dependencies' => $dependencies,
+					'force_require' => null,
 				];
 			}
 		}
@@ -130,7 +130,8 @@ class Providers
 
 			foreach ($modules_dirs as $modules_dir) {
 				foreach (glob($modules_dir . DIRECTORY_SEPARATOR . '*') as $module_dir) {
-					if (file_exists($module_dir . DIRECTORY_SEPARATOR . 'Providers' . DIRECTORY_SEPARATOR . $className . '.php')) {
+					$fullFilePath = $module_dir . DIRECTORY_SEPARATOR . 'Providers' . DIRECTORY_SEPARATOR . $className . '.php';
+					if (file_exists($fullFilePath)) {
 						$module_name = explode(DIRECTORY_SEPARATOR, $module_dir);
 						$module_name = array_reverse($module_name)[0];
 						$fullClassName = '\\Model\\' . $module_name . '\\Providers\\' . $className;
@@ -138,6 +139,7 @@ class Providers
 							'package' => $module_name,
 							'provider' => $fullClassName,
 							'dependencies' => [],
+							'force_require' => $fullFilePath,
 						];
 					}
 				}
